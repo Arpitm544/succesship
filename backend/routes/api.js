@@ -22,7 +22,9 @@ router.get("/memories", async (req, res) => {
   try {
     const memories = await Memory.find()
       .sort({ timestamp: -1 })
+      .lean()
       .limit(5)
+      .timeout(30000)
 
     res.json(memories)
   } catch (err) {
@@ -44,7 +46,9 @@ router.post("/query", async (req, res) => {
     // just grab recent memories
     const memories = await Memory.find()
       .sort({ timestamp: -1 })
+      .lean()
       .limit(20)
+      .timeout(30000)
 
     // pick only relevant ones
     const matches = memories.filter((m) =>

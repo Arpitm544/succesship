@@ -11,10 +11,10 @@ app.use(cors())
 app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
 
-
-
 // Connect to DB on server startup
-connectDB()
+(async () => {
+  await connectDB()
+})()
 
 // Welcome route
 app.get('/', (req, res) => {
@@ -40,9 +40,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal Server Error", details: err.message });
 });
 
-  app.listen(5000, () => {
-    console.log("Server started on port 5000")
-  })
-
+app.listen(5000, () => {
+  console.log("Server started on port 5000")
+})
 
 module.exports = app;
