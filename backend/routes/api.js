@@ -1,50 +1,69 @@
-const express = require('express')
+const express = require("express")
 const router = express.Router()
-const Memory = require('../models/Memory')
-const geminiService = require('../services/geminiService')
 
-router.post('/memories', async (req, res) => {
+const Memory = require("../models/Memory")
+const geminiService = require("../services/geminiService")
+
+
+// save a memory
+router.post("/memories", async (req, res) => {
   try {
-    const savedMemory = await Memory.create(req.body)
-    res.json(savedMemory)
-  } catch (error) {
-    res.status(500).json({ error: "Failed to save" })
+    const memory = await Memory.create(req.body)
+    res.json(memory)
+  } catch (err) {
+    console.log("error saving memory:", err.message)
+    res.status(500).json({ error: "could not save memory" })
   }
 })
 
-router.get('/memories', async (req, res) => {
+
+// get latest memories
+router.get("/memories", async (req, res) => {
   try {
-   const result = await Memory.find()
-  .limit(5)
-  .sort({ createdAt: -1 })
-  .lean()
-  .maxTimeMS(30000);
-    res.json(result)
-  } catch (error) {
-    console.error('Get memories error:', error);
-    res.status(500).json({ error: "Failed to get list", details: error.message })
+    const memories = await Memory.find()
+      .sort({ timestamp: -1 })
+      .limit(5)
+
+    res.json(memories)
+  } catch (err) {
+    console.log("error fetching memories:", err.message)
+    res.status(500).json({ error: "could not fetch memories" })
   }
 })
 
-router.post('/query',async(req,res)=>{
-  try {
-    const { query, entity }=req.body
-    const result = await Memory.find()
-  .limit(5)
-  .sort({ createdAt: -1 })
-  .lean()
-  .maxTimeMS(30000);
 
-    const bestMemories=result.filter((m)=>m.content.toLowerCase().includes(query.toLowerCase())).slice(0, 5)
-    const aiAnswer=await geminiService.askGemini(query, bestMemories)
-    
+// query memories + ask gemini
+router.post("/query", async (req, res) => {
+  try {
+    const { query } = req.body
+
+    if (!query) {
+      return res.status(400).json({ error: "query is required" })
+    }
+
+    // just grab recent memories
+    const memories = await Memory.find()
+      .sort({ timestamp: -1 })
+      .limit(20)
+
+    // pick only relevant ones
+    const matches = memories.filter((m) =>
+      m.content.toLowerCase().includes(query.toLowerCase())
+    )
+
+    const best = matches.slice(0, 5)
+
+    // send context to gemini
+    const answer = await geminiService.askGemini(query, best)
+
     res.json({
-        decision:aiAnswer,
-        context:bestMemories
+      answer,
+      context: best,
     })
-    
-  } catch (error) {
-    res.status(500).json({ error: "Failed to process query" })
+  } catch (err) {
+    console.log("query error:", err.message)
+    res.status(500).json({ error: "something went wrong" })
   }
 })
+
 module.exports = router
