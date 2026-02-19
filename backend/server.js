@@ -21,13 +21,12 @@ const connectDB = async () => {
 
   try {
     const connection = await mongoose.connect(process.env.MONGO_URI, {
-      socketTimeoutMS: 60000,
-      serverSelectionTimeoutMS: 30000,
-      connectTimeoutMS: 30000,
-      maxPoolSize: 20,
-      minPoolSize: 5,
-      retryWrites: true,
-      retryReads: true,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      maxPoolSize: 5,
+      minPoolSize: 1,
+      retryWrites: false,
       family: 4
     });
     
@@ -67,6 +66,19 @@ app.get('/', (req, res) => {
       'POST /api/query': 'Query memories with AI analysis'
     }
   });
+});
+
+// Health check
+app.get('/health', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      res.json({ status: 'healthy', db: 'connected' });
+    } else {
+      res.status(503).json({ status: 'unhealthy', db: 'disconnected' });
+    }
+  } catch (error) {
+    res.status(503).json({ status: 'unhealthy', error: error.message });
+  }
 });
 
 app.use('/api', apiRoutes)

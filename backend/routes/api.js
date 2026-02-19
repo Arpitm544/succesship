@@ -20,16 +20,20 @@ router.post("/memories", async (req, res) => {
 // get latest memories
 router.get("/memories", async (req, res) => {
   try {
-    const memories = await Memory.find()
+    const query = Memory.find()
       .sort({ timestamp: -1 })
       .lean()
-      .limit(5)
-      .timeout(30000)
+      .limit(5);
+    
+    // Set query timeout
+    query.setOptions({ maxTimeMS: 5000 });
+    
+    const memories = await query.exec();
 
     res.json(memories)
   } catch (err) {
     console.log("error fetching memories:", err.message)
-    res.status(500).json({ error: "could not fetch memories" })
+    res.status(500).json({ error: "could not fetch memories", details: err.message })
   }
 })
 
@@ -44,11 +48,13 @@ router.post("/query", async (req, res) => {
     }
 
     // just grab recent memories
-    const memories = await Memory.find()
+    const query = Memory.find()
       .sort({ timestamp: -1 })
       .lean()
-      .limit(20)
-      .timeout(30000)
+      .limit(20);
+    
+    query.setOptions({ maxTimeMS: 5000 });
+    const memories = await query.exec();
 
     // pick only relevant ones
     const matches = memories.filter((m) =>
