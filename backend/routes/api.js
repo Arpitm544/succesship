@@ -17,7 +17,7 @@ router.get('/memories', async (req, res) => {
     const result=await Memory.find()
     res.json(result)
   } catch (error) {
-    res.status(500).json({error:"Failed to get list"})
+    res.status(500).json({ error: "Failed to get list", details: error.message })
   }
 })
 

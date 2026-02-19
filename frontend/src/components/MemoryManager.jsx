@@ -16,7 +16,7 @@ const MemoryManager = () => {
 
   const fetchMemories = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/memories")
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/memories`)
       setMemories(res.data)
     } catch (err) {
       console.log("Fetch error:", err)
@@ -36,7 +36,7 @@ const MemoryManager = () => {
     setLoading(true)
 
     try {
-      await axios.post("http://localhost:5000/api/memories", {
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/memories`, {
         ...formData,
         tags: formData.tags
           .split(",")
