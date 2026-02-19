@@ -14,7 +14,7 @@ router.post('/memories', async (req, res) => {
 
 router.get('/memories', async (req, res) => {
   try {
-    const result=await Memory.find()
+    const result=await Memory.find().maxTimeMS(30000)
     res.json(result)
   } catch (error) {
     res.status(500).json({ error: "Failed to get list", details: error.message })
@@ -24,7 +24,7 @@ router.get('/memories', async (req, res) => {
 router.post('/query',async(req,res)=>{
   try {
     const { query, entity }=req.body
-    const result=await Memory.find()
+    const result=await Memory.find().maxTimeMS(30000)
 
     const bestMemories=result.filter((m)=>m.content.toLowerCase().includes(query.toLowerCase())).slice(0, 5)
     const aiAnswer=await geminiService.askGemini(query, bestMemories)
