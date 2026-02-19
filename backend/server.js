@@ -8,14 +8,20 @@ const apiRoutes = require('./routes/api')
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return;
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("DB Connected");
+  } catch (err) {
+    console.error("DB Connection Error:", err);
+  }
+};
 
-if (!process.env.MONGO_URI) {
-  console.error("CRITICAL ERROR: MONGO_URI is not defined");
-}
-
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('DB Connected'))
-  .catch(err => console.error('DB Connection Error:', err));
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 app.use('/api', apiRoutes)
 
